@@ -67,7 +67,6 @@
             transition: border-color 0.3s ease;
             position: relative;
             overflow: hidden; /* To contain the image */
-            cursor: pointer;
         }
         
         .upload-area.dragover {
@@ -211,11 +210,11 @@
                 <div class="card flex flex-col">
                     <h2 class="text-2xl font-semibold mb-4 text-white">Upload Your Painting</h2>
                     <div id="art-analyzer-uploadArea" class="upload-area flex-grow min-h-[300px]">
-                        <div id="art-analyzer-uploadContent" class="upload-area-content text-center pointer-events-none">
+                        <div id="art-analyzer-uploadContent" class="upload-area-content">
                             <svg class="mx-auto h-12 w-12 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" /></svg>
                             <p class="mt-2 text-gray-400">Drag and drop your image here</p>
                             <p class="text-sm text-gray-500">or</p>
-                            <button id="art-analyzer-browseBtn" type="button" class="mt-2 text-purple-400 font-semibold hover:text-purple-300 pointer-events-auto">click to browse files</button>
+                            <button id="art-analyzer-browseBtn" type="button" class="mt-2 text-purple-400 font-semibold hover:text-purple-300">click to browse files</button>
                         </div>
                         <img id="art-analyzer-imagePreview" src="" alt="Image Preview" class="hidden">
                     </div>
@@ -271,16 +270,15 @@
 
         let currentImageBase64 = null;
 
-        // --- Event Listeners ---
+        // --- Event Listeners (Simplified and Corrected) ---
         ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(e => uploadArea.addEventListener(e, preventDefaults, false));
         ['dragenter', 'dragover'].forEach(e => uploadArea.addEventListener(e, () => uploadArea.classList.add('dragover'), false));
         ['dragleave', 'drop'].forEach(e => uploadArea.addEventListener(e, () => uploadArea.classList.remove('dragover'), false));
         uploadArea.addEventListener('drop', handleDrop, false);
-        uploadArea.addEventListener('click', () => fileInput.click()); // Make the whole area clickable
-
-        // This listener specifically handles the button click and stops it from propagating
-        browseBtn.addEventListener('click', (e) => {
-            e.stopPropagation(); // Prevents the uploadArea click listener from firing as well
+        
+        // This is now the ONLY click listener for uploading files.
+        // It is simple, direct, and has no conflicts.
+        browseBtn.addEventListener('click', () => {
             fileInput.click();
         });
 
@@ -325,7 +323,7 @@
             try {
                 const [aiResponse, dominantColors] = await Promise.all([
                     getAiAnalysis(base64Image),
-                    getDominantColors(base64Image, 5) // We run this in parallel on the client
+                    getDominantColors(base64Image, 5)
                 ]);
                 displayResults(aiResponse, dominantColors);
             } catch (error) {
@@ -400,7 +398,6 @@
                 throw new Error(errorData.error);
             }
             
-            // The AI returns a JSON string, which we need to parse on the client-side.
             return JSON.parse(await response.text());
         }
 
