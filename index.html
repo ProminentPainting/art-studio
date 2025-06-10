@@ -7,48 +7,222 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #0d1117; color: #c9d1d9; }
-        .art-studio-container { min-height: 100vh; }
-        .header-area { position: relative; padding: 4rem 2rem; overflow: hidden; text-align: center; }
-        .header-area::before { content: ''; position: absolute; top: 50%; left: 50%; width: 800px; height: 800px; background-image: radial-gradient(circle, rgba(168, 85, 247, 0.2) 0%, rgba(13, 17, 23, 0) 60%); transform: translate(-50%, -50%); z-index: 0; }
-        .header-content { position: relative; z-index: 1; }
-        .main-title { background: -webkit-linear-gradient(45deg, #a855f7, #f9a8d4); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .card { background-color: #161b22; border: 1px solid #30363d; border-radius: 0.75rem; padding: 2rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1); }
-        .upload-area { border: 2px dashed #4a5568; border-radius: 0.75rem; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: border-color 0.3s ease; position: relative; overflow: hidden; }
-        .upload-area.dragover { border-color: #a855f7; }
-        .upload-area img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 10; }
-        .upload-area-content { z-index: 20; position: relative; background-color: rgba(13, 17, 23, 0.7); padding: 1rem; border-radius: 0.5rem; }
-        .btn-primary { background-color: #238636; color: white; font-weight: 500; padding: 0.75rem 1.5rem; border-radius: 0.5rem; transition: background-color 0.3s ease; cursor: pointer; border: none; }
-        .btn-primary:hover { background-color: #2ea043; }
-        .btn-primary:disabled { background-color: #2ea04380; cursor: not-allowed; }
-        .loader { width: 50px; height: 50px; border-radius: 50%; display: inline-block; position: relative; border: 3px solid; border-color: #FFF #FFF transparent transparent; box-sizing: border-box; animation: rotation 1s linear infinite; }
-        @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        /* Custom Styles */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0d1117; /* A very dark blue, almost black */
+            color: #c9d1d9; /* Light gray for text */
+        }
+
+        .art-studio-container {
+            background-color: #0d1117;
+            min-height: 100vh;
+        }
+        
+        .header-area {
+            position: relative;
+            padding: 4rem 2rem;
+            overflow: hidden;
+            text-align: center;
+        }
+
+        .header-area::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 800px;
+            height: 800px;
+            background-image: radial-gradient(circle, rgba(168, 85, 247, 0.2) 0%, rgba(13, 17, 23, 0) 60%);
+            transform: translate(-50%, -50%);
+            z-index: 0;
+        }
+        
+        .header-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .main-title {
+            background: -webkit-linear-gradient(45deg, #a855f7, #f9a8d4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .card {
+            background-color: #161b22; /* Slightly lighter dark blue */
+            border: 1px solid #30363d; /* Subtle border */
+            border-radius: 0.75rem;
+            padding: 2rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+        }
+
+        .upload-area {
+            border: 2px dashed #4a5568;
+            border-radius: 0.75rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: border-color 0.3s ease;
+            position: relative;
+            overflow: hidden; /* To contain the image */
+            cursor: pointer;
+        }
+        
+        .upload-area.dragover {
+            border-color: #a855f7;
+        }
+
+        .upload-area img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: 10;
+        }
+
+        .upload-area-content {
+            z-index: 20;
+            position: relative;
+            background-color: rgba(13, 17, 23, 0.7); /* Semi-transparent background for text when image is present */
+            padding: 1rem;
+            border-radius: 0.5rem;
+        }
+        
+        .progress-bar {
+            background-color: #30363d;
+            border-radius: 9999px;
+            overflow: hidden;
+        }
+        
+        .progress-bar-inner {
+            background-color: #a855f7;
+            height: 100%;
+            border-radius: 9999px;
+            transition: width 0.5s ease-in-out;
+        }
+
+        .analysis-section {
+            border-bottom: 1px solid #30363d;
+        }
+        .analysis-section:last-child {
+            border-bottom: none;
+        }
+
+        .btn-primary {
+            background-color: #238636;
+            color: white;
+            font-weight: 500;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            transition: background-color 0.3s ease;
+            cursor: pointer;
+            border: none;
+        }
+
+        .btn-primary:hover {
+            background-color: #2ea043;
+        }
+        
+        .btn-primary:disabled {
+            background-color: #2ea04380;
+            cursor: not-allowed;
+        }
+
+        /* Spinner Animation */
+        .loader {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: inline-block;
+            position: relative;
+            border: 3px solid;
+            border-color: #FFF #FFF transparent transparent;
+            box-sizing: border-box;
+            animation: rotation 1s linear infinite;
+        }
+        .loader::after,
+        .loader::before {
+            content: '';  
+            box-sizing: border-box;
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            margin: auto;
+            border: 3px solid;
+            border-color: transparent transparent #a855f7 #a855f7;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            box-sizing: border-box;
+            animation: rotationBack 0.5s linear infinite;
+            transform-origin: center center;
+        }
+
+        .pattern-visualization {
+            position: relative;
+            background-color: #0d1117;
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+        
+        .pattern-visualization img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        
+        .pattern-visualization svg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        @keyframes rotation {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        } 
+        
+        @keyframes rotationBack {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(-360deg); }
+        }
     </style>
 </head>
 <body>
+
     <div class="art-studio-container">
         <header class="header-area">
             <div class="header-content">
                 <h1 class="text-4xl md:text-5xl font-bold main-title">Art Interpretation Studio</h1>
-                <p class="mt-4 text-lg text-gray-400 max-w-2xl mx-auto">Upload a painting or artwork to get an analysis of its content and colors.</p>
+                <p class="mt-4 text-lg text-gray-400 max-w-2xl mx-auto">Upload a painting or artwork to uncover hidden symbols, color harmony, and artistic context.</p>
             </div>
         </header>
+
         <main class="px-4 pb-12">
             <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <div class="card flex flex-col">
                     <h2 class="text-2xl font-semibold mb-4 text-white">Upload Your Painting</h2>
                     <div id="art-analyzer-uploadArea" class="upload-area flex-grow min-h-[300px]">
-                        <div id="art-analyzer-uploadContent" class="upload-area-content text-center">
+                        <div id="art-analyzer-uploadContent" class="upload-area-content text-center pointer-events-none">
                             <svg class="mx-auto h-12 w-12 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" /></svg>
                             <p class="mt-2 text-gray-400">Drag and drop your image here</p>
                             <p class="text-sm text-gray-500">or</p>
-                            <button id="art-analyzer-browseBtn" type="button" class="mt-2 text-purple-400 font-semibold hover:text-purple-300">click to browse files</button>
+                            <button id="art-analyzer-browseBtn" type="button" class="mt-2 text-purple-400 font-semibold hover:text-purple-300 pointer-events-auto">click to browse files</button>
                         </div>
                         <img id="art-analyzer-imagePreview" src="" alt="Image Preview" class="hidden">
                     </div>
                     <input type="file" id="art-analyzer-fileInput" class="hidden" accept="image/*">
                     <button id="art-analyzer-analyzeAnotherBtn" class="btn-primary w-full mt-6 hidden">Analyze Another Painting</button>
                 </div>
+
                 <div id="art-analyzer-analysisResults" class="card">
                     <div id="art-analyzer-initialState" class="flex flex-col items-center justify-center h-full text-center">
                         <svg class="h-16 w-16 text-gray-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6a7.5 7.5 0 100 15 7.5 7.5 0 000-15zM21 21l-5.197-5.197" /></svg>
@@ -58,244 +232,289 @@
                     <div id="art-analyzer-loadingState" class="hidden flex-col items-center justify-center h-full text-center">
                         <span class="loader"></span>
                         <h2 class="text-2xl font-semibold mt-6 text-gray-400">Analyzing Artwork...</h2>
+                        <p class="text-gray-500 mt-2">This may take a few moments...</p>
                     </div>
                     <div id="art-analyzer-errorState" class="hidden flex-col items-center justify-center h-full text-center">
                          <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-red-500" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>
                         <h2 class="text-2xl font-semibold mt-4 text-gray-400">Analysis Failed</h2>
-                        <p id="art-analyzer-errorMessage" class="text-gray-500 mt-2">Could not analyze the image.</p>
+                        <p id="art-analyzer-errorMessage" class="text-gray-500 mt-2">Could not analyze the image. Please try again.</p>
                     </div>
                     <div id="art-analyzer-resultsContent" class="hidden"></div>
                 </div>
             </div>
         </main>
-    </div>
-   <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // --- DOM Elements ---
-    const uploadArea = document.getElementById('art-analyzer-uploadArea');
-    const uploadContent = document.getElementById('art-analyzer-uploadContent');
-    const fileInput = document.getElementById('art-analyzer-fileInput');
-    const imagePreview = document.getElementById('art-analyzer-imagePreview');
-    const browseBtn = document.getElementById('art-analyzer-browseBtn');
-    const analyzeAnotherBtn = document.getElementById('art-analyzer-analyzeAnotherBtn');
-    const analysisResults = document.getElementById('art-analyzer-analysisResults');
-    const initialState = document.getElementById('art-analyzer-initialState');
-    const loadingState = document.getElementById('art-analyzer-loadingState');
-    const errorState = document.getElementById('art-analyzer-errorState');
-    const errorMessage = document.getElementById('art-analyzer-errorMessage');
-    const resultsContent = document.getElementById('art-analyzer-resultsContent');
-
-    let currentImageBase64 = null;
-
-    // --- Event Listeners ---
-    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(e => uploadArea.addEventListener(e, preventDefaults, false));
-    ['dragenter', 'dragover'].forEach(e => uploadArea.addEventListener(e, () => uploadArea.classList.add('dragover'), false));
-    ['dragleave', 'drop'].forEach(e => uploadArea.addEventListener(e, () => uploadArea.classList.remove('dragover'), false));
-    uploadArea.addEventListener('drop', handleDrop, false);
-    uploadArea.addEventListener('click', () => fileInput.click()); // Make the whole area clickable
-    fileInput.addEventListener('change', e => handleFiles(e.target.files));
-    analyzeAnotherBtn.addEventListener('click', resetTool);
-
-    function preventDefaults(e) {
-        e.preventDefault();
-        e.stopPropagation();
-    }
-
-    function handleDrop(e) {
-        handleFiles(e.dataTransfer.files);
-    }
-
-    function handleFiles(files) {
-        if (files.length === 0) return;
-        const file = files[0];
-        if (!file.type.startsWith('image/')) {
-            alert('Please upload an image file.');
-            return;
-        }
-        const reader = new FileReader();
-        reader.onload = e => {
-            currentImageBase64 = e.target.result;
-            imagePreview.src = currentImageBase64;
-            imagePreview.classList.remove('hidden');
-            uploadContent.classList.add('hidden');
-            analyzeAnotherBtn.classList.remove('hidden');
-            analyzeAnotherBtn.disabled = true;
-            startAnalysis(currentImageBase64);
-        };
-        reader.readAsDataURL(file);
-    }
-
-    async function startAnalysis(base64Image) {
-        initialState.classList.add('hidden');
-        errorState.classList.add('hidden');
-        loadingState.classList.remove('hidden');
-        resultsContent.classList.add('hidden');
-
-        try {
-            const [aiResponse, dominantColors] = await Promise.all([
-                getAiAnalysis(base64Image),
-                getDominantColors(base64Image, 5)
-            ]);
-            displayResults(aiResponse, dominantColors);
-        } catch (error) {
-            console.error('Analysis failed:', error);
-            errorMessage.textContent = error.message || 'An unknown error occurred. Check the console for details.';
-            showErrorState();
-        } finally {
-            analyzeAnotherBtn.disabled = false;
-        }
-    }
-
-    function showErrorState() {
-        loadingState.classList.add('hidden');
-        errorState.classList.remove('hidden');
-    }
-
-    async function getAiAnalysis(base64Image) {
-        const pureBase64 = base64Image.split(',')[1];
-        const prompt = `
-            Analyze the attached artwork. Provide your analysis in a valid JSON object format. Do not include any text, markdown, or backticks before or after the JSON object.
-            The JSON object must have the following structure:
-            {
-              "description": "A one-paragraph, detailed description of the artwork's subject, style, and mood.",
-              "genres": [
-                {"name": "Renaissance", "score": <integer_0_to_100>},
-                {"name": "Baroque", "score": <integer_0_to_100>},
-                {"name": "Rococo", "score": <integer_0_to_100>},
-                {"name": "Neoclassicism", "score": <integer_0_to_100>},
-                {"name": "Romanticism", "score": <integer_0_to_100>},
-                {"name": "Realism", "score": <integer_0_to_100>},
-                {"name": "Impressionism", "score": <integer_0_to_100>},
-                {"name": "Post-Impressionism", "score": <integer_0_to_100>},
-                {"name": "Fauvism", "score": <integer_0_to_100>},
-                {"name": "Expressionism", "score": <integer_0_to_100>},
-                {"name": "Cubism", "score": <integer_0_to_100>},
-                {"name": "Surrealism", "score": <integer_0_to_100>},
-                {"name": "Abstract Expressionism", "score": <integer_0_to_100>},
-                {"name": "Pop Art", "score": <integer_0_to_100>},
-                {"name": "Minimalism", "score": <integer_0_to_100>}
-              ],
-              "artHistoryContext": "A paragraph explaining the historical context of the artwork's most prominent genre, discussing when and why it emerged, and its key characteristics.",
-              "colorHarmony": {
-                "name": "<name_of_harmony, e.g., 'Complementary', 'Analogous'>",
-                "description": "A detailed, one-sentence explanation of this color harmony and how it specifically contributes to the artwork's mood and visual impact."
-              },
-              "composition": {
-                "horizontalSymmetry": <float_0.0_to_1.0>,
-                "verticalSymmetry": <float_0.0_to_1.0>,
-                "diagonalBias": <float_0.0_to_1.0>,
-                "circularPatterns": <float_0.0_to_1.0>,
-                "summary": "A one-sentence summary of how the composition feels (e.g., 'The composition feels balanced and harmonious, with a slight dynamic tension.')."
-              },
-              "hiddenSymbols": [
-                {
-                  "name": "<name_of_symbol_or_theme>",
-                  "confidence": <integer_0_to_100>,
-                  "description": "A brief explanation of the symbol and its context in art."
-                }
-              ],
-              "interpretation": "A thoughtful, one-paragraph thematic interpretation explaining the potential meaning and the artist's message, referencing the visual elements."
-            }
-            Base your analysis on established art history principles.`;
-
-        const response = await fetch('/.netlify/functions/analyze-image', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ imageBase64: pureBase64, prompt: prompt })
-        });
-
-        if (!response.ok) {
-            const errorData = await response.json().catch(() => ({ error: 'Failed to parse error from server.' }));
-            throw new Error(errorData.error);
-        }
-
-        // The body is already parsed by the serverless function, but since it was a stringified JSON, we need to parse it here.
-        return JSON.parse(await response.text());
-    }
-
-    function getDominantColors(base64Image, colorCount) {
-        return new Promise((resolve) => {
-            const img = new Image();
-            img.onload = () => {
-                const canvas = document.createElement('canvas');
-                const ctx = canvas.getContext('2d');
-                canvas.width = img.width;
-                canvas.height = img.height;
-                ctx.drawImage(img, 0, 0, img.width, img.height);
-
-                const imageData = ctx.getImageData(0, 0, img.width, img.height).data;
-                const colorMap = {};
-                const quantizationFactor = 32;
-
-                for (let i = 0; i < imageData.length; i += 4) {
-                    const r = Math.round(imageData[i] / quantizationFactor) * quantizationFactor;
-                    const g = Math.round(imageData[i+1] / quantizationFactor) * quantizationFactor;
-                    const b = Math.round(imageData[i+2] / quantizationFactor) * quantizationFactor;
-                    const rgb = `rgb(<span class="math-inline">\{r\},</span>{g},${b})`;
-
-                    if (r > 16 && g > 16 && b > 16 && r < 240 && g < 240 && b < 240) {
-                       colorMap[rgb] = (colorMap[rgb] || 0) + 1;
-                    }
-                }
-
-                const sortedColors = Object.keys(colorMap).sort((a, b) => colorMap[b] - colorMap[a]);
-                const dominantHex = sortedColors.slice(0, colorCount).map(rgb => "#" + rgb.match(/\d+/g).map(n => parseInt(n).toString(16).padStart(2, '0')).join(''));
-                resolve(dominantHex);
-            };
-            img.src = base64Image;
-        });
-    }
-
-    function displayResults(apiData, dominantColors) {
-        loadingState.classList.add('hidden');
-        resultsContent.innerHTML = generateResultsHTML(apiData, dominantColors);
-        resultsContent.classList.remove('hidden');
-    }
-
-    function resetTool() {
-        currentImageBase64 = null;
-        imagePreview.src = '';
-        imagePreview.classList.add('hidden');
-        uploadContent.classList.remove('hidden');
-        analyzeAnotherBtn.classList.add('hidden');
-        fileInput.value = '';
-        initialState.classList.remove('hidden');
-        loadingState.classList.add('hidden');
-        errorState.classList.add('hidden');
-        resultsContent.classList.add('hidden');
-        resultsContent.innerHTML = '';
-    }
-
-    // --- HTML Generation Functions ---
-
-    function generateResultsHTML(apiData, dominantColors) {
-        const { description, genres, artHistoryContext, colorHarmony, composition, hiddenSymbols, interpretation } = apiData;
-        return `
-            <div class="space-y-8">
-                ${generateSectionHTML("Image Description", `<p class="text-gray-300">${description}</p>`)}
-                ${generatePatternVisualizationHTML(composition)}
-                ${generateSectionHTML("Genre Analysis", generateGenreHTML(genres))}
-                ${generateSectionHTML("Art History Context", `<p class="text-gray-300">${artHistoryContext}</p>`)}
-                ${generateSectionHTML("Color Analysis", generateColorHTML(dominantColors, colorHarmony))}
-                ${generateSectionHTML("Hidden Symbols", generateSymbolsHTML(hiddenSymbols))}
-                ${generateSectionHTML("Thematic Interpretation", `<p class="text-gray-300 bg-gray-900/50 p-4 rounded-lg border border-purple-500/30">${interpretation}</p>`)}
+        <footer class="text-sm text-gray-500 border-t border-gray-700 mt-12 py-6 px-4">
+            <div class="max-w-7xl mx-auto flex justify-between items-center">
+                <span>ProminentPainting.com &copy; 2025</span>
+                <a href="https://prominentpainting.com/unleash-your-inner-artist-the-ultimate-guide-to-finding-art-inspiration/" target="_blank" rel="noopener noreferrer" class="text-purple-400 hover:text-purple-300 transition-colors">
+                    More Inspiration
+                </a>
             </div>
-        `;
-    }
+        </footer>
+    </div>
 
-    function generateSectionHTML(title, content) {
-        return `<div class="analysis-section pb-6 last:pb-0 last:border-none"><h3 class="text-xl font-semibold mb-4 text-white"><span class="math-inline">\{title\}</h3\></span>{content}</div>`;
-    }
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // --- DOM Elements ---
+        const uploadArea = document.getElementById('art-analyzer-uploadArea');
+        const uploadContent = document.getElementById('art-analyzer-uploadContent');
+        const fileInput = document.getElementById('art-analyzer-fileInput');
+        const imagePreview = document.getElementById('art-analyzer-imagePreview');
+        const browseBtn = document.getElementById('art-analyzer-browseBtn');
+        const analyzeAnotherBtn = document.getElementById('art-analyzer-analyzeAnotherBtn');
+        const analysisResults = document.getElementById('art-analyzer-analysisResults');
+        const initialState = document.getElementById('art-analyzer-initialState');
+        const loadingState = document.getElementById('art-analyzer-loadingState');
+        const errorState = document.getElementById('art-analyzer-errorState');
+        const errorMessage = document.getElementById('art-analyzer-errorMessage');
+        const resultsContent = document.getElementById('art-analyzer-resultsContent');
 
-    function generatePatternVisualizationHTML(composition) {
-        const hLineOpacity = composition.horizontalSymmetry;
-        const vLineOpacity = composition.verticalSymmetry;
-        const d1LineOpacity = composition.diagonalBias > 0.5 ? composition.diagonalBias : 0;
-        const d2LineOpacity = composition.diagonalBias > 0.5 ? composition.diagonalBias : 0;
-        const circleOpacity = composition.circularPatterns;
+        let currentImageBase64 = null;
 
-        return generateSectionHTML("Pattern Visualization", `
-            <div class="pattern-visualization relative bg-gray-900 rounded-lg overflow-hidden">
-                <img src="<span class="math-inline">\{currentImageBase64\}" alt\="Artwork for visualization" class\="opacity\-70"\>
+        // --- Event Listeners ---
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(e => uploadArea.addEventListener(e, preventDefaults, false));
+        ['dragenter', 'dragover'].forEach(e => uploadArea.addEventListener(e, () => uploadArea.classList.add('dragover'), false));
+        ['dragleave', 'drop'].forEach(e => uploadArea.addEventListener(e, () => uploadArea.classList.remove('dragover'), false));
+        uploadArea.addEventListener('drop', handleDrop, false);
+        uploadArea.addEventListener('click', () => fileInput.click()); // Make the whole area clickable
+
+        // This listener specifically handles the button click and stops it from propagating
+        browseBtn.addEventListener('click', (e) => {
+            e.stopPropagation(); // Prevents the uploadArea click listener from firing as well
+            fileInput.click();
+        });
+
+        fileInput.addEventListener('change', e => handleFiles(e.target.files));
+        analyzeAnotherBtn.addEventListener('click', resetTool);
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        function handleDrop(e) {
+            handleFiles(e.dataTransfer.files);
+        }
+
+        function handleFiles(files) {
+            if (files.length === 0) return;
+            const file = files[0];
+            if (!file.type.startsWith('image/')) {
+                alert('Please upload an image file.');
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = e => {
+                currentImageBase64 = e.target.result;
+                imagePreview.src = currentImageBase64;
+                imagePreview.classList.remove('hidden');
+                uploadContent.classList.add('hidden');
+                analyzeAnotherBtn.classList.remove('hidden');
+                analyzeAnotherBtn.disabled = true;
+                startAnalysis(currentImageBase64);
+            };
+            reader.readAsDataURL(file);
+        }
+
+        async function startAnalysis(base64Image) {
+            initialState.classList.add('hidden');
+            errorState.classList.add('hidden');
+            loadingState.classList.remove('hidden');
+            resultsContent.classList.add('hidden');
+
+            try {
+                const [aiResponse, dominantColors] = await Promise.all([
+                    getAiAnalysis(base64Image),
+                    getDominantColors(base64Image, 5) // We run this in parallel on the client
+                ]);
+                displayResults(aiResponse, dominantColors);
+            } catch (error) {
+                console.error('Analysis failed:', error);
+                errorMessage.textContent = error.message || 'An unknown error occurred. Check the console for details.';
+                showErrorState();
+            } finally {
+                analyzeAnotherBtn.disabled = false;
+            }
+        }
+
+        function showErrorState() {
+            loadingState.classList.add('hidden');
+            errorState.classList.remove('hidden');
+        }
+
+        async function getAiAnalysis(base64Image) {
+            const pureBase64 = base64Image.split(',')[1];
+            const prompt = `
+                Analyze the attached artwork. Provide your analysis in a valid JSON object format. Do not include any text, markdown, or backticks before or after the JSON object.
+                The JSON object must have the following structure:
+                {
+                  "description": "A one-paragraph, detailed description of the artwork's subject, style, and mood.",
+                  "genres": [
+                    {"name": "Renaissance", "score": <integer_0_to_100>},
+                    {"name": "Baroque", "score": <integer_0_to_100>},
+                    {"name": "Rococo", "score": <integer_0_to_100>},
+                    {"name": "Neoclassicism", "score": <integer_0_to_100>},
+                    {"name": "Romanticism", "score": <integer_0_to_100>},
+                    {"name": "Realism", "score": <integer_0_to_100>},
+                    {"name": "Impressionism", "score": <integer_0_to_100>},
+                    {"name": "Post-Impressionism", "score": <integer_0_to_100>},
+                    {"name": "Fauvism", "score": <integer_0_to_100>},
+                    {"name": "Expressionism", "score": <integer_0_to_100>},
+                    {"name": "Cubism", "score": <integer_0_to_100>},
+                    {"name": "Surrealism", "score": <integer_0_to_100>},
+                    {"name": "Abstract Expressionism", "score": <integer_0_to_100>},
+                    {"name": "Pop Art", "score": <integer_0_to_100>},
+                    {"name": "Minimalism", "score": <integer_0_to_100>}
+                  ],
+                  "artHistoryContext": "A paragraph explaining the historical context of the artwork's most prominent genre, discussing when and why it emerged, and its key characteristics.",
+                  "colorHarmony": {
+                    "name": "<name_of_harmony, e.g., 'Complementary', 'Analogous'>",
+                    "description": "A detailed, one-sentence explanation of this color harmony and how it specifically contributes to the artwork's mood and visual impact."
+                  },
+                  "composition": {
+                    "horizontalSymmetry": <float_0.0_to_1.0>,
+                    "verticalSymmetry": <float_0.0_to_1.0>,
+                    "diagonalBias": <float_0.0_to_1.0>,
+                    "circularPatterns": <float_0.0_to_1.0>,
+                    "summary": "A one-sentence summary of how the composition feels (e.g., 'The composition feels balanced and harmonious, with a slight dynamic tension.')."
+                  },
+                  "hiddenSymbols": [
+                    {
+                      "name": "<name_of_symbol_or_theme>",
+                      "confidence": <integer_0_to_100>,
+                      "description": "A brief explanation of the symbol and its context in art."
+                    }
+                  ],
+                  "interpretation": "A thoughtful, one-paragraph thematic interpretation explaining the potential meaning and the artist's message, referencing the visual elements."
+                }
+                Base your analysis on established art history principles.`;
+            
+            const response = await fetch('/.netlify/functions/analyze-image', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ imageBase64: pureBase64, prompt: prompt })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({ error: 'Failed to parse error from server.' }));
+                throw new Error(errorData.error);
+            }
+            
+            // The AI returns a JSON string, which we need to parse on the client-side.
+            return JSON.parse(await response.text());
+        }
+
+        function getDominantColors(base64Image, colorCount) {
+            return new Promise((resolve) => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    ctx.drawImage(img, 0, 0, img.width, img.height);
+                    
+                    const imageData = ctx.getImageData(0, 0, img.width, img.height).data;
+                    const colorMap = {};
+                    const quantizationFactor = 32;
+
+                    for (let i = 0; i < imageData.length; i += 4) {
+                        const r = Math.round(imageData[i] / quantizationFactor) * quantizationFactor;
+                        const g = Math.round(imageData[i+1] / quantizationFactor) * quantizationFactor;
+                        const b = Math.round(imageData[i+2] / quantizationFactor) * quantizationFactor;
+                        const rgb = `rgb(${r},${g},${b})`;
+                        
+                        if (r > 16 && g > 16 && b > 16 && r < 240 && g < 240 && b < 240) {
+                           colorMap[rgb] = (colorMap[rgb] || 0) + 1;
+                        }
+                    }
+
+                    const sortedColors = Object.keys(colorMap).sort((a, b) => colorMap[b] - colorMap[a]);
+                    const dominantHex = sortedColors.slice(0, colorCount).map(rgb => "#" + rgb.match(/\d+/g).map(n => parseInt(n).toString(16).padStart(2, '0')).join(''));
+                    resolve(dominantHex);
+                };
+                img.src = base64Image;
+            });
+        }
+        
+        function displayResults(apiData, dominantColors) {
+            loadingState.classList.add('hidden');
+            resultsContent.innerHTML = generateResultsHTML(apiData, dominantColors);
+            resultsContent.classList.remove('hidden');
+        }
+
+        function resetTool() {
+            currentImageBase64 = null;
+            imagePreview.src = '';
+            imagePreview.classList.add('hidden');
+            uploadContent.classList.remove('hidden');
+            analyzeAnotherBtn.classList.add('hidden');
+            fileInput.value = '';
+            initialState.classList.remove('hidden');
+            loadingState.classList.add('hidden');
+            errorState.classList.add('hidden');
+            resultsContent.classList.add('hidden');
+            resultsContent.innerHTML = '';
+        }
+        
+        // --- HTML Generation Functions ---
+        
+        function generateResultsHTML(apiData, dominantColors) {
+            const { description, genres, artHistoryContext, colorHarmony, composition, hiddenSymbols, interpretation } = apiData;
+            return `
+                <div class="space-y-8">
+                    ${generateSectionHTML("Image Description", `<p class="text-gray-300">${description}</p>`)}
+                    ${generatePatternVisualizationHTML(composition)}
+                    ${generateSectionHTML("Genre Analysis", generateGenreHTML(genres))}
+                    ${generateSectionHTML("Art History Context", `<p class="text-gray-300">${artHistoryContext}</p>`)}
+                    ${generateSectionHTML("Color Analysis", generateColorHTML(dominantColors, colorHarmony))}
+                    ${generateSectionHTML("Hidden Symbols", generateSymbolsHTML(hiddenSymbols))}
+                    ${generateSectionHTML("Thematic Interpretation", `<p class="text-gray-300 bg-gray-900/50 p-4 rounded-lg border border-purple-500/30">${interpretation}</p>`)}
+                </div>
+            `;
+        }
+        
+        function generateSectionHTML(title, content) {
+            return `<div class="analysis-section pb-6 last:pb-0 last:border-none"><h3 class="text-xl font-semibold mb-4 text-white">${title}</h3>${content}</div>`;
+        }
+
+        function generatePatternVisualizationHTML(composition) {
+            const hLineOpacity = composition.horizontalSymmetry;
+            const vLineOpacity = composition.verticalSymmetry;
+            const d1LineOpacity = composition.diagonalBias > 0.5 ? composition.diagonalBias : 0;
+            const d2LineOpacity = composition.diagonalBias > 0.5 ? composition.diagonalBias : 0;
+            const circleOpacity = composition.circularPatterns;
+
+            return generateSectionHTML("Pattern Visualization", `
+                <div class="pattern-visualization relative bg-gray-900 rounded-lg overflow-hidden">
+                    <img src="${currentImageBase64}" alt="Artwork for visualization" class="opacity-70">
+                    <svg viewBox="0 0 100 100" preserveAspectRatio="none" class="absolute top-0 left-0 w-full h-full">
+                        <line x1="0" y1="50" x2="100" y2="50" stroke="#a855f7" stroke-width="0.5" stroke-dasharray="2 1" opacity="${hLineOpacity}" />
+                        <line x1="50" y1="0" x2="50" y2="100" stroke="#a855f7" stroke-width="0.5" stroke-dasharray="2 1" opacity="${vLineOpacity}" />
+                        <line x1="0" y1="0" x2="100" y2="100" stroke="#a855f7" stroke-width="0.5" stroke-dasharray="2 1" opacity="${d1LineOpacity}" />
+                        <line x1="100" y1="0" x2="0" y2="100" stroke="#a855f7" stroke-width="0.5" stroke-dasharray="2 1" opacity="${d2LineOpacity}" />
+                        <circle cx="50" cy="50" r="35" stroke="#f9a8d4" stroke-width="0.7" stroke-dasharray="3 2" fill="none" opacity="${circleOpacity}" />
+                    </svg>
+                </div>
+                <p class="text-gray-400 text-sm mt-3">${composition.summary}</p>
+            `);
+        }
+        
+        function generateGenreHTML(genres) {
+            const relevantGenres = genres.filter(genre => genre.score > 10).sort((a, b) => b.score - a.score);
+            if (relevantGenres.length === 0) return `<p class="text-gray-500">No prominent genres identified.</p>`;
+            return `<div class="space-y-4">${relevantGenres.map(genre => `<div><div class="flex justify-between items-center mb-1"><span class="font-medium text-gray-300">${genre.name}</span><span class="text-sm font-medium text-purple-300">${genre.score}%</span></div><div class="progress-bar w-full h-2"><div class="progress-bar-inner" style="width: ${genre.score}%"></div></div></div>`).join('')}</div>`;
+        }
+
+        function generateColorHTML(dominantColors, colorHarmony) {
+            return `<div class="space-y-6"><div><h4 class="font-semibold mb-3 text-gray-300">Dominant Palette</h4><div class="flex flex-wrap gap-2">${dominantColors.map(color => `<div class="w-10 h-10 rounded-full border-2 border-gray-600" style="background-color: ${color};" title="${color}"></div>`).join('')}</div></div><div><h4 class="font-semibold mb-3 text-gray-300">Color Harmony</h4><p class="text-sm text-gray-400"><strong class="text-purple-300">${colorHarmony.name}:</strong> ${colorHarmony.description}</p></div></div>`;
+        }
+
+        function generateSymbolsHTML(symbols) {
+            if (!symbols || symbols.length === 0) return `<p class="text-gray-500">No specific symbols were identified.</p>`;
+            return `<div class="space-y-5">${symbols.map(symbol => `<div class="bg-gray-900/50 p-4 rounded-md"><div class="flex justify-between items-center mb-2"><span class="font-bold text-purple-300">${symbol.name}</span><span class="text-xs px-2 py-1 rounded-full bg-purple-500/20 text-purple-300">${symbol.confidence}% Confidence</span></div><p class="text-sm text-gray-400">${symbol.description}</p></div>`).join('')}</div>`;
+        }
+    });
+    </script>
 </body>
 </html>
