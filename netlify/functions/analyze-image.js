@@ -1,56 +1,61 @@
-// file: netlify/functions/analyze-image.js
+// In file: netlify/functions/analyze-image.js
 
 exports.handler = async function(event) {
     if (event.httpMethod !== 'POST') {
         return { statusCode: 405, body: 'Method Not Allowed' };
     }
 
-    const { IMAGGA_API_KEY, IMAGGA_API_SECRET } = process.env;
+    const { GEMINI_API_KEY } = process.env;
 
-    if (!IMAGGA_API_KEY || !IMAGGA_API_SECRET) {
-        const errorMessage = 'API key or secret is not configured correctly on the server.';
-        console.error(errorMessage);
-        return { statusCode: 500, body: JSON.stringify({ error: errorMessage }) };
+    if (!GEMINI_API_KEY) {
+        return { statusCode: 500, body: JSON.stringify({ error: 'GEMINI_API_KEY is not configured on the server.' }) };
     }
 
     try {
-        const { imageBase64 } = JSON.parse(event.body);
-        const formData = new FormData();
-        formData.append('image_base64', imageBase64);
-        const authHeader = 'Basic ' + btoa(IMAGGA_API_KEY + ':' + IMAGGA_API_SECRET);
+        const { imageBase64, prompt } = JSON.parse(event.body);
 
-        const [tagsResponse, colorsResponse] = await Promise.all([
-            fetch('https://api.imagga.com/v2/tags', {
-                method: 'POST',
-                headers: { 'Authorization': authHeader },
-                body: formData
-            }),
-            fetch('https://api.imagga.com/v2/colors', {
-                method: 'POST',
-                headers: { 'Authorization': authHeader },
-                body: formData
-            })
-        ]);
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${GEMINI_API_KEY}`;
 
-        if (!tagsResponse.ok || !colorsResponse.ok) {
-            const errorText = !tagsResponse.ok ? await tagsResponse.text() : await colorsResponse.text();
-            console.error('Imagga API Error:', errorText);
-            throw new Error(`The API provider returned an error. Please check your keys.`);
+        const payload = {
+            contents: [{
+                parts: [
+                    { text: prompt },
+                    { inline_data: { mime_type: "image/jpeg", data: imageBase64 } }
+                ]
+            }],
+            generation_config: { response_mime_type: "application/json" }
+        };
+
+        const apiResponse = await fetch(apiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        if (!apiResponse.ok) {
+            const errorBody = await apiResponse.text();
+            console.error("Gemini API Error:", errorBody);
+            throw new Error("The AI model failed to process the request.");
         }
 
-        const tagsData = await tagsResponse.json();
-        const colorsData = await colorsResponse.json();
+        const result = await apiResponse.json();
 
-        return {
-            statusCode: 200,
-            body: JSON.stringify({ tags: tagsData.result.tags, colors: colorsData.result.colors })
-        };
+        if (result.candidates?.[0]?.content?.parts?.[0]) {
+             return {
+                statusCode: 200,
+                // The response from Gemini is a JSON string, which we pass directly.
+                body: result.candidates[0].content.parts[0].text
+            };
+        } else {
+             console.error("Unexpected API response structure:", result);
+             throw new Error("Could not parse the analysis from the API response.");
+        }
 
     } catch (error) {
         console.error('Serverless function error:', error.message);
         return {
             statusCode: 500,
-            body: JSON.stringify({ error: error.message || 'Failed to analyze the image due to a server error.' })
+            body: JSON.stringify({ error: error.message || 'An internal server error occurred.' })
         };
     }
 };
