@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Art Interpretation Studio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #0d1117; color: #c9d1d9; }
+        .art-studio-container { min-height: 100vh; }
+        .header-area { position: relative; padding: 4rem 2rem; overflow: hidden; text-align: center; }
+        .header-area::before { content: ''; position: absolute; top: 50%; left: 50%; width: 800px; height: 800px; background-image: radial-gradient(circle, rgba(168, 85, 247, 0.2) 0%, rgba(13, 17, 23, 0) 60%); transform: translate(-50%, -50%); z-index: 0; }
+        .header-content { position: relative; z-index: 1; }
+        .main-title { background: -webkit-linear-gradient(45deg, #a855f7, #f9a8d4); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .card { background-color: #161b22; border: 1px solid #30363d; border-radius: 0.75rem; padding: 2rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1); }
+        .upload-area { border: 2px dashed #4a5568; border-radius: 0.75rem; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: border-color 0.3s ease; position: relative; overflow: hidden; }
+        .upload-area.dragover { border-color: #a855f7; }
+        .upload-area img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 10; }
+        .upload-area-content { z-index: 20; position: relative; background-color: rgba(13, 17, 23, 0.7); padding: 1rem; border-radius: 0.5rem; }
+        .btn-primary { background-color: #238636; color: white; font-weight: 500; padding: 0.75rem 1.5rem; border-radius: 0.5rem; transition: background-color 0.3s ease; cursor: pointer; border: none; }
+        .btn-primary:hover { background-color: #2ea043; }
+        .btn-primary:disabled { background-color: #2ea04380; cursor: not-allowed; }
+        .loader { width: 50px; height: 50px; border-radius: 50%; display: inline-block; position: relative; border: 3px solid; border-color: #FFF #FFF transparent transparent; box-sizing: border-box; animation: rotation 1s linear infinite; }
+        @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div class="art-studio-container">
+        <header class="header-area">
+            <div class="header-content">
+                <h1 class="text-4xl md:text-5xl font-bold main-title">Art Interpretation Studio</h1>
+                <p class="mt-4 text-lg text-gray-400 max-w-2xl mx-auto">Upload a painting or artwork to get an analysis of its content and colors.</p>
+            </div>
+        </header>
+        <main class="px-4 pb-12">
+            <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div class="card flex flex-col">
+                    <h2 class="text-2xl font-semibold mb-4 text-white">Upload Your Painting</h2>
+                    <div id="art-analyzer-uploadArea" class="upload-area flex-grow min-h-[300px]">
+                        <div id="art-analyzer-uploadContent" class="upload-area-content text-center">
+                            <svg class="mx-auto h-12 w-12 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" /></svg>
+                            <p class="mt-2 text-gray-400">Drag and drop your image here</p>
+                            <p class="text-sm text-gray-500">or</p>
+                            <button id="art-analyzer-browseBtn" type="button" class="mt-2 text-purple-400 font-semibold hover:text-purple-300">click to browse files</button>
+                        </div>
+                        <img id="art-analyzer-imagePreview" src="" alt="Image Preview" class="hidden">
+                    </div>
+                    <input type="file" id="art-analyzer-fileInput" class="hidden" accept="image/*">
+                    <button id="art-analyzer-analyzeAnotherBtn" class="btn-primary w-full mt-6 hidden">Analyze Another Painting</button>
+                </div>
+                <div id="art-analyzer-analysisResults" class="card">
+                    <div id="art-analyzer-initialState" class="flex flex-col items-center justify-center h-full text-center">
+                        <svg class="h-16 w-16 text-gray-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6a7.5 7.5 0 100 15 7.5 7.5 0 000-15zM21 21l-5.197-5.197" /></svg>
+                        <h2 class="text-2xl font-semibold mt-4 text-gray-400">Analysis Results</h2>
+                        <p class="text-gray-500 mt-2">Upload a painting to see analysis results</p>
+                    </div>
+                    <div id="art-analyzer-loadingState" class="hidden flex-col items-center justify-center h-full text-center">
+                        <span class="loader"></span>
+                        <h2 class="text-2xl font-semibold mt-6 text-gray-400">Analyzing Artwork...</h2>
+                    </div>
+                    <div id="art-analyzer-errorState" class="hidden flex-col items-center justify-center h-full text-center">
+                         <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-red-500" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>
+                        <h2 class="text-2xl font-semibold mt-4 text-gray-400">Analysis Failed</h2>
+                        <p id="art-analyzer-errorMessage" class="text-gray-500 mt-2">Could not analyze the image.</p>
+                    </div>
+                    <div id="art-analyzer-resultsContent" class="hidden"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const uploadArea = document.getElementById('art-analyzer-uploadArea');
+            const fileInput = document.getElementById('art-analyzer-fileInput');
+            const imagePreview = document.getElementById('art-analyzer-imagePreview');
+            const analyzeAnotherBtn = document.getElementById('art-analyzer-analyzeAnotherBtn');
+            const initialState = document.getElementById('art-analyzer-initialState');
+            const loadingState = document.getElementById('art-analyzer-loadingState');
+            const errorState = document.getElementById('art-analyzer-errorState');
+            const errorMessage = document.getElementById('art-analyzer-errorMessage');
+            const resultsContent = document.getElementById('art-analyzer-resultsContent');
+
+            function setupEventListeners() {
+                ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(e => uploadArea.addEventListener(e, e => { e.preventDefault(); e.stopPropagation(); }, false));
+                ['dragenter', 'dragover'].forEach(e => uploadArea.addEventListener(e, () => uploadArea.classList.add('dragover'), false));
+                ['dragleave', 'drop'].forEach(e => uploadArea.addEventListener(e, () => uploadArea.classList.remove('dragover'), false));
+                uploadArea.addEventListener('drop', e => handleFiles(e.dataTransfer.files), false);
+                uploadArea.addEventListener('click', () => fileInput.click());
+                fileInput.addEventListener('change', e => handleFiles(e.target.files));
+                analyzeAnotherBtn.addEventListener('click', resetTool);
+            }
+
+            function handleFiles(files) {
+                if (!files || files.length === 0) return;
+                const file = files[0];
+                if (!file.type.startsWith('image/')) { alert('Please upload an image file.'); return; }
+                const reader = new FileReader();
+                reader.onload = e => {
+                    imagePreview.src = e.target.result;
+                    imagePreview.classList.remove('hidden');
+                    document.getElementById('art-analyzer-uploadContent').classList.add('hidden');
+                    analyzeAnotherBtn.classList.remove('hidden');
+                    analyzeAnotherBtn.disabled = true;
+                    startAnalysis(e.target.result);
+                };
+                reader.readAsDataURL(file);
+            }
+
+            async function startAnalysis(base64Image) {
+                initialState.classList.add('hidden');
+                errorState.classList.add('hidden');
+                loadingState.classList.remove('hidden');
+                resultsContent.classList.add('hidden');
+                try {
+                    const apiData = await getAiAnalysis(base64Image);
+                    displayResults(apiData);
+                } catch (error) {
+                    console.error('Analysis failed:', error);
+                    errorMessage.textContent = error.message;
+                    errorState.classList.remove('hidden');
+                    loadingState.classList.add('hidden');
+                } finally {
+                    analyzeAnotherBtn.disabled = false;
+                }
+            }
+
+            async function getAiAnalysis(base64Image) {
+                const response = await fetch('/.netlify/functions/analyze-image', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ imageBase64: base64Image.split(',')[1] })
+                });
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({ error: 'Failed to parse error response from server.' }));
+                    throw new Error(errorData.error || 'The analysis request failed.');
+                }
+                return response.json();
+            }
+
+            function displayResults(apiData) {
+                loadingState.classList.add('hidden');
+                resultsContent.innerHTML = generateResultsHTML(apiData);
+                resultsContent.classList.remove('hidden');
+            }
+
+            function resetTool() {
+                imagePreview.src = '';
+                imagePreview.classList.add('hidden');
+                document.getElementById('art-analyzer-uploadContent').classList.remove('hidden');
+                analyzeAnotherBtn.classList.add('hidden');
+                fileInput.value = '';
+                initialState.classList.remove('hidden');
+                errorState.classList.add('hidden');
+                resultsContent.classList.add('hidden');
+            }
+
+            function generateResultsHTML(apiData) {
+                const { tags, colors } = apiData;
+                return `<div class="space-y-8">${generateSectionHTML("Identified Tags", generateTagsHTML(tags))}${generateSectionHTML("Color Analysis", generateColorHTML(colors))}</div>`;
+            }
+
+            function generateSectionHTML(title, content) {
+                return `<div class="analysis-section pb-6 last:pb-0 last:border-none"><h3 class="text-xl font-semibold mb-4 text-white">${title}</h3>${content}</div>`;
+            }
+
+            function generateTagsHTML(tags) {
+                if (!tags || tags.length === 0) return `<p class="text-gray-500">No prominent tags identified.</p>`;
+                return `<div class="space-y-4">${tags.slice(0, 10).map(tag => `<div><div class="flex justify-between items-center mb-1"><span class="font-medium text-gray-300">${tag.tag.en}</span><span class="text-sm font-medium text-purple-300">${Math.round(tag.confidence)}%</span></div><div class="progress-bar w-full h-2"><div class="progress-bar-inner" style="width: ${tag.confidence}%"></div></div></div>`).join('')}</div>`;
+            }
+
+            function generateColorHTML(colors) {
+                const { image_colors, foreground_colors, background_colors } = colors;
+                let html = '<div class="space-y-6">';
+                if (image_colors && image_colors.length > 0) html += `<div><h4 class="font-semibold mb-3 text-gray-300">Dominant Palette</h4><div class="flex flex-wrap gap-2">${image_colors.map(c => `<div class="w-10 h-10 rounded-full border-2 border-gray-600" style="background-color: ${c.html_code};" title="${c.closest_palette_color} (${Math.round(c.percent)}%)"></div>`).join('')}</div></div>`;
+                if (foreground_colors && foreground_colors.length > 0) html += `<div><h4 class="font-semibold mb-3 text-gray-300">Foreground Colors</h4><div class="flex flex-wrap gap-2">${foreground_colors.map(c => `<div class="w-10 h-10 rounded-full border-2 border-gray-600" style="background-color: ${c.html_code};" title="${c.closest_palette_color} (${Math.round(c.percent)}%)"></div>`).join('')}</div></div>`;
+                if (background_colors && background_colors.length > 0) html += `<div><h4 class="font-semibold mb-3 text-gray-300">Background Colors</h4><div class="flex flex-wrap gap-2">${background_colors.map(c => `<div class="w-10 h-10 rounded-full border-2 border-gray-600" style="background-color: ${c.html_code};" title="${c.closest_palette_color} (${Math.round(c.percent)}%)"></div>`).join('')}</div></div>`;
+                html += '</div>';
+                return html;
+            }
+
+            setupEventListeners();
+        });
+    </script>
+</body>
+</html>
