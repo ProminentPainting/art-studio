@@ -69,118 +69,233 @@
             </div>
         </main>
     </div>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const uploadArea = document.getElementById('art-analyzer-uploadArea');
-            const fileInput = document.getElementById('art-analyzer-fileInput');
-            const imagePreview = document.getElementById('art-analyzer-imagePreview');
-            const analyzeAnotherBtn = document.getElementById('art-analyzer-analyzeAnotherBtn');
-            const initialState = document.getElementById('art-analyzer-initialState');
-            const loadingState = document.getElementById('art-analyzer-loadingState');
-            const errorState = document.getElementById('art-analyzer-errorState');
-            const errorMessage = document.getElementById('art-analyzer-errorMessage');
-            const resultsContent = document.getElementById('art-analyzer-resultsContent');
+   <script>
+document.addEventListener('DOMContentLoaded', function() {
+    // --- DOM Elements ---
+    const uploadArea = document.getElementById('art-analyzer-uploadArea');
+    const uploadContent = document.getElementById('art-analyzer-uploadContent');
+    const fileInput = document.getElementById('art-analyzer-fileInput');
+    const imagePreview = document.getElementById('art-analyzer-imagePreview');
+    const browseBtn = document.getElementById('art-analyzer-browseBtn');
+    const analyzeAnotherBtn = document.getElementById('art-analyzer-analyzeAnotherBtn');
+    const analysisResults = document.getElementById('art-analyzer-analysisResults');
+    const initialState = document.getElementById('art-analyzer-initialState');
+    const loadingState = document.getElementById('art-analyzer-loadingState');
+    const errorState = document.getElementById('art-analyzer-errorState');
+    const errorMessage = document.getElementById('art-analyzer-errorMessage');
+    const resultsContent = document.getElementById('art-analyzer-resultsContent');
 
-            function setupEventListeners() {
-                ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(e => uploadArea.addEventListener(e, e => { e.preventDefault(); e.stopPropagation(); }, false));
-                ['dragenter', 'dragover'].forEach(e => uploadArea.addEventListener(e, () => uploadArea.classList.add('dragover'), false));
-                ['dragleave', 'drop'].forEach(e => uploadArea.addEventListener(e, () => uploadArea.classList.remove('dragover'), false));
-                uploadArea.addEventListener('drop', e => handleFiles(e.dataTransfer.files), false);
-                uploadArea.addEventListener('click', () => fileInput.click());
-                fileInput.addEventListener('change', e => handleFiles(e.target.files));
-                analyzeAnotherBtn.addEventListener('click', resetTool);
-            }
+    let currentImageBase64 = null;
 
-            function handleFiles(files) {
-                if (!files || files.length === 0) return;
-                const file = files[0];
-                if (!file.type.startsWith('image/')) { alert('Please upload an image file.'); return; }
-                const reader = new FileReader();
-                reader.onload = e => {
-                    imagePreview.src = e.target.result;
-                    imagePreview.classList.remove('hidden');
-                    document.getElementById('art-analyzer-uploadContent').classList.add('hidden');
-                    analyzeAnotherBtn.classList.remove('hidden');
-                    analyzeAnotherBtn.disabled = true;
-                    startAnalysis(e.target.result);
-                };
-                reader.readAsDataURL(file);
-            }
+    // --- Event Listeners ---
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(e => uploadArea.addEventListener(e, preventDefaults, false));
+    ['dragenter', 'dragover'].forEach(e => uploadArea.addEventListener(e, () => uploadArea.classList.add('dragover'), false));
+    ['dragleave', 'drop'].forEach(e => uploadArea.addEventListener(e, () => uploadArea.classList.remove('dragover'), false));
+    uploadArea.addEventListener('drop', handleDrop, false);
+    uploadArea.addEventListener('click', () => fileInput.click()); // Make the whole area clickable
+    fileInput.addEventListener('change', e => handleFiles(e.target.files));
+    analyzeAnotherBtn.addEventListener('click', resetTool);
 
-            async function startAnalysis(base64Image) {
-                initialState.classList.add('hidden');
-                errorState.classList.add('hidden');
-                loadingState.classList.remove('hidden');
-                resultsContent.classList.add('hidden');
-                try {
-                    const apiData = await getAiAnalysis(base64Image);
-                    displayResults(apiData);
-                } catch (error) {
-                    console.error('Analysis failed:', error);
-                    errorMessage.textContent = error.message;
-                    errorState.classList.remove('hidden');
-                    loadingState.classList.add('hidden');
-                } finally {
-                    analyzeAnotherBtn.disabled = false;
+    function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
+    function handleDrop(e) {
+        handleFiles(e.dataTransfer.files);
+    }
+
+    function handleFiles(files) {
+        if (files.length === 0) return;
+        const file = files[0];
+        if (!file.type.startsWith('image/')) {
+            alert('Please upload an image file.');
+            return;
+        }
+        const reader = new FileReader();
+        reader.onload = e => {
+            currentImageBase64 = e.target.result;
+            imagePreview.src = currentImageBase64;
+            imagePreview.classList.remove('hidden');
+            uploadContent.classList.add('hidden');
+            analyzeAnotherBtn.classList.remove('hidden');
+            analyzeAnotherBtn.disabled = true;
+            startAnalysis(currentImageBase64);
+        };
+        reader.readAsDataURL(file);
+    }
+
+    async function startAnalysis(base64Image) {
+        initialState.classList.add('hidden');
+        errorState.classList.add('hidden');
+        loadingState.classList.remove('hidden');
+        resultsContent.classList.add('hidden');
+
+        try {
+            const [aiResponse, dominantColors] = await Promise.all([
+                getAiAnalysis(base64Image),
+                getDominantColors(base64Image, 5)
+            ]);
+            displayResults(aiResponse, dominantColors);
+        } catch (error) {
+            console.error('Analysis failed:', error);
+            errorMessage.textContent = error.message || 'An unknown error occurred. Check the console for details.';
+            showErrorState();
+        } finally {
+            analyzeAnotherBtn.disabled = false;
+        }
+    }
+
+    function showErrorState() {
+        loadingState.classList.add('hidden');
+        errorState.classList.remove('hidden');
+    }
+
+    async function getAiAnalysis(base64Image) {
+        const pureBase64 = base64Image.split(',')[1];
+        const prompt = `
+            Analyze the attached artwork. Provide your analysis in a valid JSON object format. Do not include any text, markdown, or backticks before or after the JSON object.
+            The JSON object must have the following structure:
+            {
+              "description": "A one-paragraph, detailed description of the artwork's subject, style, and mood.",
+              "genres": [
+                {"name": "Renaissance", "score": <integer_0_to_100>},
+                {"name": "Baroque", "score": <integer_0_to_100>},
+                {"name": "Rococo", "score": <integer_0_to_100>},
+                {"name": "Neoclassicism", "score": <integer_0_to_100>},
+                {"name": "Romanticism", "score": <integer_0_to_100>},
+                {"name": "Realism", "score": <integer_0_to_100>},
+                {"name": "Impressionism", "score": <integer_0_to_100>},
+                {"name": "Post-Impressionism", "score": <integer_0_to_100>},
+                {"name": "Fauvism", "score": <integer_0_to_100>},
+                {"name": "Expressionism", "score": <integer_0_to_100>},
+                {"name": "Cubism", "score": <integer_0_to_100>},
+                {"name": "Surrealism", "score": <integer_0_to_100>},
+                {"name": "Abstract Expressionism", "score": <integer_0_to_100>},
+                {"name": "Pop Art", "score": <integer_0_to_100>},
+                {"name": "Minimalism", "score": <integer_0_to_100>}
+              ],
+              "artHistoryContext": "A paragraph explaining the historical context of the artwork's most prominent genre, discussing when and why it emerged, and its key characteristics.",
+              "colorHarmony": {
+                "name": "<name_of_harmony, e.g., 'Complementary', 'Analogous'>",
+                "description": "A detailed, one-sentence explanation of this color harmony and how it specifically contributes to the artwork's mood and visual impact."
+              },
+              "composition": {
+                "horizontalSymmetry": <float_0.0_to_1.0>,
+                "verticalSymmetry": <float_0.0_to_1.0>,
+                "diagonalBias": <float_0.0_to_1.0>,
+                "circularPatterns": <float_0.0_to_1.0>,
+                "summary": "A one-sentence summary of how the composition feels (e.g., 'The composition feels balanced and harmonious, with a slight dynamic tension.')."
+              },
+              "hiddenSymbols": [
+                {
+                  "name": "<name_of_symbol_or_theme>",
+                  "confidence": <integer_0_to_100>,
+                  "description": "A brief explanation of the symbol and its context in art."
                 }
+              ],
+              "interpretation": "A thoughtful, one-paragraph thematic interpretation explaining the potential meaning and the artist's message, referencing the visual elements."
             }
+            Base your analysis on established art history principles.`;
 
-            async function getAiAnalysis(base64Image) {
-                const response = await fetch('/.netlify/functions/analyze-image', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ imageBase64: base64Image.split(',')[1] })
-                });
-                if (!response.ok) {
-                    const errorData = await response.json().catch(() => ({ error: 'Failed to parse error response from server.' }));
-                    throw new Error(errorData.error || 'The analysis request failed.');
-                }
-                return response.json();
-            }
-
-            function displayResults(apiData) {
-                loadingState.classList.add('hidden');
-                resultsContent.innerHTML = generateResultsHTML(apiData);
-                resultsContent.classList.remove('hidden');
-            }
-
-            function resetTool() {
-                imagePreview.src = '';
-                imagePreview.classList.add('hidden');
-                document.getElementById('art-analyzer-uploadContent').classList.remove('hidden');
-                analyzeAnotherBtn.classList.add('hidden');
-                fileInput.value = '';
-                initialState.classList.remove('hidden');
-                errorState.classList.add('hidden');
-                resultsContent.classList.add('hidden');
-            }
-
-            function generateResultsHTML(apiData) {
-                const { tags, colors } = apiData;
-                return `<div class="space-y-8">${generateSectionHTML("Identified Tags", generateTagsHTML(tags))}${generateSectionHTML("Color Analysis", generateColorHTML(colors))}</div>`;
-            }
-
-            function generateSectionHTML(title, content) {
-                return `<div class="analysis-section pb-6 last:pb-0 last:border-none"><h3 class="text-xl font-semibold mb-4 text-white">${title}</h3>${content}</div>`;
-            }
-
-            function generateTagsHTML(tags) {
-                if (!tags || tags.length === 0) return `<p class="text-gray-500">No prominent tags identified.</p>`;
-                return `<div class="space-y-4">${tags.slice(0, 10).map(tag => `<div><div class="flex justify-between items-center mb-1"><span class="font-medium text-gray-300">${tag.tag.en}</span><span class="text-sm font-medium text-purple-300">${Math.round(tag.confidence)}%</span></div><div class="progress-bar w-full h-2"><div class="progress-bar-inner" style="width: ${tag.confidence}%"></div></div></div>`).join('')}</div>`;
-            }
-
-            function generateColorHTML(colors) {
-                const { image_colors, foreground_colors, background_colors } = colors;
-                let html = '<div class="space-y-6">';
-                if (image_colors && image_colors.length > 0) html += `<div><h4 class="font-semibold mb-3 text-gray-300">Dominant Palette</h4><div class="flex flex-wrap gap-2">${image_colors.map(c => `<div class="w-10 h-10 rounded-full border-2 border-gray-600" style="background-color: ${c.html_code};" title="${c.closest_palette_color} (${Math.round(c.percent)}%)"></div>`).join('')}</div></div>`;
-                if (foreground_colors && foreground_colors.length > 0) html += `<div><h4 class="font-semibold mb-3 text-gray-300">Foreground Colors</h4><div class="flex flex-wrap gap-2">${foreground_colors.map(c => `<div class="w-10 h-10 rounded-full border-2 border-gray-600" style="background-color: ${c.html_code};" title="${c.closest_palette_color} (${Math.round(c.percent)}%)"></div>`).join('')}</div></div>`;
-                if (background_colors && background_colors.length > 0) html += `<div><h4 class="font-semibold mb-3 text-gray-300">Background Colors</h4><div class="flex flex-wrap gap-2">${background_colors.map(c => `<div class="w-10 h-10 rounded-full border-2 border-gray-600" style="background-color: ${c.html_code};" title="${c.closest_palette_color} (${Math.round(c.percent)}%)"></div>`).join('')}</div></div>`;
-                html += '</div>';
-                return html;
-            }
-
-            setupEventListeners();
+        const response = await fetch('/.netlify/functions/analyze-image', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ imageBase64: pureBase64, prompt: prompt })
         });
-    </script>
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({ error: 'Failed to parse error from server.' }));
+            throw new Error(errorData.error);
+        }
+
+        // The body is already parsed by the serverless function, but since it was a stringified JSON, we need to parse it here.
+        return JSON.parse(await response.text());
+    }
+
+    function getDominantColors(base64Image, colorCount) {
+        return new Promise((resolve) => {
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                canvas.width = img.width;
+                canvas.height = img.height;
+                ctx.drawImage(img, 0, 0, img.width, img.height);
+
+                const imageData = ctx.getImageData(0, 0, img.width, img.height).data;
+                const colorMap = {};
+                const quantizationFactor = 32;
+
+                for (let i = 0; i < imageData.length; i += 4) {
+                    const r = Math.round(imageData[i] / quantizationFactor) * quantizationFactor;
+                    const g = Math.round(imageData[i+1] / quantizationFactor) * quantizationFactor;
+                    const b = Math.round(imageData[i+2] / quantizationFactor) * quantizationFactor;
+                    const rgb = `rgb(<span class="math-inline">\{r\},</span>{g},${b})`;
+
+                    if (r > 16 && g > 16 && b > 16 && r < 240 && g < 240 && b < 240) {
+                       colorMap[rgb] = (colorMap[rgb] || 0) + 1;
+                    }
+                }
+
+                const sortedColors = Object.keys(colorMap).sort((a, b) => colorMap[b] - colorMap[a]);
+                const dominantHex = sortedColors.slice(0, colorCount).map(rgb => "#" + rgb.match(/\d+/g).map(n => parseInt(n).toString(16).padStart(2, '0')).join(''));
+                resolve(dominantHex);
+            };
+            img.src = base64Image;
+        });
+    }
+
+    function displayResults(apiData, dominantColors) {
+        loadingState.classList.add('hidden');
+        resultsContent.innerHTML = generateResultsHTML(apiData, dominantColors);
+        resultsContent.classList.remove('hidden');
+    }
+
+    function resetTool() {
+        currentImageBase64 = null;
+        imagePreview.src = '';
+        imagePreview.classList.add('hidden');
+        uploadContent.classList.remove('hidden');
+        analyzeAnotherBtn.classList.add('hidden');
+        fileInput.value = '';
+        initialState.classList.remove('hidden');
+        loadingState.classList.add('hidden');
+        errorState.classList.add('hidden');
+        resultsContent.classList.add('hidden');
+        resultsContent.innerHTML = '';
+    }
+
+    // --- HTML Generation Functions ---
+
+    function generateResultsHTML(apiData, dominantColors) {
+        const { description, genres, artHistoryContext, colorHarmony, composition, hiddenSymbols, interpretation } = apiData;
+        return `
+            <div class="space-y-8">
+                ${generateSectionHTML("Image Description", `<p class="text-gray-300">${description}</p>`)}
+                ${generatePatternVisualizationHTML(composition)}
+                ${generateSectionHTML("Genre Analysis", generateGenreHTML(genres))}
+                ${generateSectionHTML("Art History Context", `<p class="text-gray-300">${artHistoryContext}</p>`)}
+                ${generateSectionHTML("Color Analysis", generateColorHTML(dominantColors, colorHarmony))}
+                ${generateSectionHTML("Hidden Symbols", generateSymbolsHTML(hiddenSymbols))}
+                ${generateSectionHTML("Thematic Interpretation", `<p class="text-gray-300 bg-gray-900/50 p-4 rounded-lg border border-purple-500/30">${interpretation}</p>`)}
+            </div>
+        `;
+    }
+
+    function generateSectionHTML(title, content) {
+        return `<div class="analysis-section pb-6 last:pb-0 last:border-none"><h3 class="text-xl font-semibold mb-4 text-white"><span class="math-inline">\{title\}</h3\></span>{content}</div>`;
+    }
+
+    function generatePatternVisualizationHTML(composition) {
+        const hLineOpacity = composition.horizontalSymmetry;
+        const vLineOpacity = composition.verticalSymmetry;
+        const d1LineOpacity = composition.diagonalBias > 0.5 ? composition.diagonalBias : 0;
+        const d2LineOpacity = composition.diagonalBias > 0.5 ? composition.diagonalBias : 0;
+        const circleOpacity = composition.circularPatterns;
+
+        return generateSectionHTML("Pattern Visualization", `
+            <div class="pattern-visualization relative bg-gray-900 rounded-lg overflow-hidden">
+                <img src="<span class="math-inline">\{currentImageBase64\}" alt\="Artwork for visualization" class\="opacity\-70"\>
 </body>
 </html>
